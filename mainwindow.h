@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "atmcontroller.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,7 +18,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+
+
+    void on_actionButton_clicked();
+
+    void on_balanceButton_clicked();
+
 private:
     Ui::MainWindow *ui;
+    ATMController atm;
 };
 #endif // MAINWINDOW_H
