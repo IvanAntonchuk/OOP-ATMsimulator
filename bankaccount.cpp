@@ -32,3 +32,13 @@ bool BankAccount::withdraw(double amount) {
     }
     return false;
 }
+
+void BankAccount::addHistory(std::string record)
+{
+    history.push_back(record);
+}
+
+std::vector<std::string> BankAccount::getHistory() const
+{
+    return history;
+}

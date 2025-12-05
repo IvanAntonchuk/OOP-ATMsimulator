@@ -55,19 +55,24 @@ void ATMController::loadUsers()
         try {
             file >> jUsers;
             for (auto& element : jUsers) {
-                QString card = QString::fromStdString(element["card"]);
-                QString pin = QString::fromStdString(element["pin"]);
-                double bal = element["balance"];
-                database.push_back(BankAccount(card, pin, bal));
+                QString c = QString::fromStdString(element["card"]);
+                QString p = QString::fromStdString(element["pin"]);
+                double b = element["balance"];
+
+                BankAccount acc(c, p, b);
+
+                if (element.contains("history")) {
+                    std::vector<std::string> hist = element["history"];
+                    for (const auto& record : hist) {
+                        acc.addHistory(record);
+                    }
+                }
+                database.push_back(acc);
             }
-        } catch (...) {
-            qDebug() << "Помилка читання users.json";
-        }
+        } catch (...) { qDebug() << "Помилка JSON"; }
         file.close();
     } else {
         database.push_back(BankAccount("1111", "1111", 5000.0));
-        database.push_back(BankAccount("2222", "0000", 10000.0));
-        database.push_back(BankAccount("1234", "1234", 250.0));
         saveUsers();
     }
 
@@ -86,7 +91,8 @@ void ATMController::saveUsers()
         jUsers.push_back({
             {"card", acc.getCardNumber().toStdString()},
             {"pin", acc.getPin().toStdString()},
-            {"balance", acc.getBalance()}
+            {"balance", acc.getBalance()},
+            {"history", acc.getHistory()}
         });
     }
 
@@ -167,6 +173,10 @@ QString ATMController::tryWithdraw(double amount)
         atmConfig["atm_cash"]["200"] = bills200;
         atmConfig["atm_cash"]["100"] = bills100;
 
+        QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+        std::string record = time.toStdString() + " | Зняття | -" + std::to_string((int)amount) + " грн";
+        currentAccount->addHistory(record);
+
         saveConfig();
         saveUsers();
 
@@ -187,6 +197,10 @@ void ATMController::deposit(int bills100, int bills200, int bills500)
     atmConfig["atm_cash"]["100"] = atmConfig["atm_cash"]["100"].get<int>() + bills100;
     atmConfig["atm_cash"]["200"] = atmConfig["atm_cash"]["200"].get<int>() + bills200;
     atmConfig["atm_cash"]["500"] = atmConfig["atm_cash"]["500"].get<int>() + bills500;
+
+    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+    std::string record = time.toStdString() + " | Поповнення | +" + std::to_string((int)totalAmount) + " грн";
+    currentAccount->addHistory(record);
 
     saveConfig();
     saveUsers();
@@ -225,6 +239,14 @@ QString ATMController::transfer(QString recipientCard, double amount)
     currentAccount->withdraw(amount);
     recipient->deposit(amount);
 
+    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+
+    std::string recSender = time.toStdString() + " | Переказ (" + recipientCard.toStdString() + ") | -" + std::to_string((int)amount);
+    currentAccount->addHistory(recSender);
+
+    std::string recReceiver = time.toStdString() + " | Отримання (" + currentAccount->getCardNumber().toStdString() + ") | +" + std::to_string((int)amount);
+    recipient->addHistory(recReceiver);
+
     saveUsers();
 
     return "OK";
@@ -253,4 +275,10 @@ QString ATMController::createAccount(QString pin)
     saveUsers();
 
     return newCard;
+}
+
+std::vector<std::string> ATMController::getMyHistory()
+{
+    if (currentAccount) return currentAccount->getHistory();
+    return {};
 }

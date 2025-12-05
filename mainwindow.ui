@@ -18,7 +18,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="page_login">
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -427,6 +427,13 @@
          <widget class="QPushButton" name="btnTransferMenu">
           <property name="text">
            <string>Переказ коштів</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnHistoryMenu">
+          <property name="text">
+           <string>Історія транзакцій</string>
           </property>
          </widget>
         </item>
@@ -971,6 +978,27 @@
          </item>
         </layout>
        </widget>
+      </widget>
+      <widget class="QWidget" name="page_history">
+       <layout class="QVBoxLayout" name="verticalLayout_20">
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Історія операцій:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="listHistory"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnHistoryBack">
+          <property name="text">
+           <string>Назад</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

@@ -309,3 +309,21 @@ void MainWindow::on_btnRegClear_clicked()
     text.chop(1);
     ui->inputRegPin->setText(text);
 }
+
+void MainWindow::on_btnHistoryMenu_clicked()
+{
+    ui->listHistory->clear();
+
+    std::vector<std::string> history = atm.getMyHistory();
+
+    for (int i = history.size() - 1; i >= 0; --i) {
+        ui->listHistory->addItem(QString::fromStdString(history[i]));
+    }
+
+    ui->stackedWidget->setCurrentWidget(ui->page_history);
+}
+
+void MainWindow::on_btnHistoryBack_clicked()
+{
+    ui->stackedWidget->setCurrentWidget(ui->page_menu);
+}

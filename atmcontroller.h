@@ -4,6 +4,7 @@
 #include "bankaccount.h"
 #include <vector>
 #include <fstream>
+#include <QDateTime>
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -33,6 +34,7 @@ public:
     void deposit(int bills100, int bills200, int bills500);
     QString transfer(QString recipientCard, double amount);
     QString createAccount(QString pin);
+    std::vector<std::string> getMyHistory();
 
     void logout();
 };

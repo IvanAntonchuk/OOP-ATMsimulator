@@ -64,6 +64,9 @@ private slots:
     void on_btnRegBack_clicked();
     void on_btnRegClear_clicked();
 
+    void on_btnHistoryMenu_clicked();
+    void on_btnHistoryBack_clicked();
+
 private:
     Ui::MainWindow *ui;
     ATMController atm;
