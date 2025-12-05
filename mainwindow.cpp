@@ -140,10 +140,48 @@ void MainWindow::on_btnWithdrawOk_clicked()
 }
 
 
-
 void MainWindow::on_btnWithdrawBack_clicked()
 {
     ui->stackedWidget->setCurrentWidget(ui->page_menu);
     ui->lblWithdrawAmount->setText("0");
 }
 
+void MainWindow::on_btnDepositMenu_clicked()
+{
+    temp100 = 0;
+    temp200 = 0;
+    temp500 = 0;
+    updateDepositLabel();
+
+    ui->stackedWidget->setCurrentWidget(ui->page_deposit);
+}
+
+void MainWindow::on_btnDep100_clicked() { temp100++; updateDepositLabel(); }
+void MainWindow::on_btnDep200_clicked() { temp200++; updateDepositLabel(); }
+void MainWindow::on_btnDep500_clicked() { temp500++; updateDepositLabel(); }
+
+void MainWindow::updateDepositLabel()
+{
+    int total = (temp100 * 100) + (temp200 * 200) + (temp500 * 500);
+    ui->lblDepositAmount->setText(QString::number(total) + " грн");
+}
+
+void MainWindow::on_btnDepositConfirm_clicked()
+{
+    int total = (temp100 * 100) + (temp200 * 200) + (temp500 * 500);
+
+    if (total == 0) {
+        QMessageBox::warning(this, "Увага", "Ви не внесли жодної купюри!");
+        return;
+    }
+
+    atm.deposit(temp100, temp200, temp500);
+
+    QMessageBox::information(this, "Успіх", "Кошти успішно зараховано!");
+    ui->stackedWidget->setCurrentWidget(ui->page_menu);
+}
+
+void MainWindow::on_btnDepositBack_clicked()
+{
+    ui->stackedWidget->setCurrentWidget(ui->page_menu);
+}

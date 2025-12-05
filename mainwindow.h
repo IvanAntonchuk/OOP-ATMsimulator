@@ -41,10 +41,21 @@ private slots:
     void on_btn200_clicked();
     void on_btn500_clicked();
 
+    void on_btnDepositMenu_clicked();
+    void on_btnDep100_clicked();
+    void on_btnDep200_clicked();
+    void on_btnDep500_clicked();
+    void on_btnDepositConfirm_clicked();
+    void on_btnDepositBack_clicked();
+
 private:
     Ui::MainWindow *ui;
     ATMController atm;
+    int temp100 = 0;
+    int temp200 = 0;
+    int temp500 = 0;
 
+    void updateDepositLabel();
     void connectKeypad();
 };
 #endif // MAINWINDOW_H

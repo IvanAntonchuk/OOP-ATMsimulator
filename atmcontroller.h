@@ -30,6 +30,7 @@ public:
     bool checkPin(QString pin);
     double getBalance();
     QString tryWithdraw(double amount);
+    void deposit(int bills100, int bills200, int bills500);
 
     void logout();
 };

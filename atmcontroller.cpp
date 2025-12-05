@@ -167,6 +167,22 @@ QString ATMController::tryWithdraw(double amount)
     }
 }
 
+void ATMController::deposit(int bills100, int bills200, int bills500)
+{
+    if (!currentAccount) return;
+
+    double totalAmount = (bills100 * 100) + (bills200 * 200) + (bills500 * 500);
+
+    currentAccount->deposit(totalAmount);
+
+    atmConfig["atm_cash"]["100"] = atmConfig["atm_cash"]["100"].get<int>() + bills100;
+    atmConfig["atm_cash"]["200"] = atmConfig["atm_cash"]["200"].get<int>() + bills200;
+    atmConfig["atm_cash"]["500"] = atmConfig["atm_cash"]["500"].get<int>() + bills500;
+
+    saveConfig();
+    saveUsers();
+}
+
 void ATMController::logout()
 {
     currentAccount = nullptr;
