@@ -29,6 +29,18 @@ private slots:
     void on_btnExit_clicked();
     void on_btnBack_clicked();
 
+    void on_btnWithdrawMenu_clicked();
+
+    void on_btnWithdrawClear_clicked();
+
+    void on_btnWithdrawOk_clicked();
+
+    void on_btnWithdrawBack_clicked();
+
+    void on_btn100_clicked();
+    void on_btn200_clicked();
+    void on_btn500_clicked();
+
 private:
     Ui::MainWindow *ui;
     ATMController atm;

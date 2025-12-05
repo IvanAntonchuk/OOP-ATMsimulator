@@ -23,13 +23,11 @@ void MainWindow::connectKeypad()
     QList<QPushButton*> buttons = this->findChildren<QPushButton*>();
 
     for (QPushButton* btn : buttons) {
-        if (btn->objectName().startsWith("btn") && btn->objectName().length() == 4) {
-            bool isDigit = false;
-            btn->objectName().mid(3).toInt(&isDigit);
+        bool isDigit = false;
+        btn->text().toInt(&isDigit);
 
-            if (isDigit) {
-                connect(btn, &QPushButton::clicked, this, &MainWindow::onDigitPressed);
-            }
+        if (isDigit) {
+            connect(btn, &QPushButton::clicked, this, &MainWindow::onDigitPressed);
         }
     }
 }
@@ -37,9 +35,17 @@ void MainWindow::connectKeypad()
 void MainWindow::onDigitPressed()
 {
     QPushButton* button = qobject_cast<QPushButton*>(sender());
-    if (button) {
-        QString digit = button->text();
+    if (!button) return;
+
+    QString digit = button->text();
+
+    if (ui->stackedWidget->currentWidget() == ui->page_pin) {
         ui->pinInput->setText(ui->pinInput->text() + digit);
+    }
+    else if (ui->stackedWidget->currentWidget() == ui->page_withdraw) {
+        QString currentText = ui->lblWithdrawAmount->text();
+        if (currentText == "0") currentText = "";
+        ui->lblWithdrawAmount->setText(currentText + digit);
     }
 }
 
@@ -93,3 +99,46 @@ void MainWindow::on_btnExit_clicked()
     atm.logout();
     ui->stackedWidget->setCurrentWidget(ui->page_login);
 }
+
+void MainWindow::on_btnWithdrawMenu_clicked()
+{
+    ui->lblWithdrawAmount->setText("0");
+    ui->stackedWidget->setCurrentWidget(ui->page_withdraw);
+}
+
+void MainWindow::on_btnWithdrawClear_clicked()
+{
+    QString text = ui->lblWithdrawAmount->text();
+    text.chop(1);
+
+    if (text.isEmpty()) text = "0";
+
+    ui->lblWithdrawAmount->setText(text);
+}
+
+void MainWindow::on_btn100_clicked() { ui->lblWithdrawAmount->setText("100"); }
+void MainWindow::on_btn200_clicked() { ui->lblWithdrawAmount->setText("200"); }
+void MainWindow::on_btn500_clicked() { ui->lblWithdrawAmount->setText("500"); }
+
+void MainWindow::on_btnWithdrawOk_clicked()
+{
+    double amount = ui->lblWithdrawAmount->text().toDouble();
+    if (amount <= 0) return;
+
+    if (atm.withdrawAmount(amount)) {
+        QMessageBox::information(this, "Успіх", "Заберіть ваші гроші!");
+        ui->stackedWidget->setCurrentWidget(ui->page_menu);
+    } else {
+        QMessageBox::warning(this, "Помилка", "Недостатньо коштів!");
+    }
+    ui->lblWithdrawAmount->setText("0");
+}
+
+
+
+void MainWindow::on_btnWithdrawBack_clicked()
+{
+    ui->stackedWidget->setCurrentWidget(ui->page_menu);
+    ui->lblWithdrawAmount->setText("0");
+}
+
