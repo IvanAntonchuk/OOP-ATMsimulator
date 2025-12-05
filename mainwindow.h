@@ -18,8 +18,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_btnLogin_clicked();
-
     void onDigitPressed();
     void on_btnClear_clicked();
     void on_btnEnterPin_clicked();
@@ -47,6 +45,24 @@ private slots:
     void on_btnDep500_clicked();
     void on_btnDepositConfirm_clicked();
     void on_btnDepositBack_clicked();
+
+    void on_btnTransferMenu_clicked();
+    void on_btnTransNext_clicked();
+    void on_btnTransSend_clicked();
+
+    void on_btnTransCancel_clicked();
+    void on_btnTransBack_clicked();
+
+    void on_btnTransCardClear_clicked();
+    void on_btnTransAmountClear_clicked();
+
+    void on_btnLoginOk_clicked();
+    void on_btnLoginClear_clicked();
+
+    void on_btnOpenAccount_clicked();
+    void on_btnRegConfirm_clicked();
+    void on_btnRegBack_clicked();
+    void on_btnRegClear_clicked();
 
 private:
     Ui::MainWindow *ui;

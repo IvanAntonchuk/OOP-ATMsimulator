@@ -2,6 +2,8 @@
 #include <QDir>
 #include <QDebug>
 #include <QCoreApplication>
+#include <cstdlib>
+#include <ctime>
 
 ATMController::ATMController()
 {
@@ -15,6 +17,7 @@ ATMController::ATMController()
     loadConfig();
 
     loadUsers();
+    std::srand(std::time(nullptr));
 }
 
 void ATMController::loadConfig()
@@ -67,6 +70,12 @@ void ATMController::loadUsers()
         database.push_back(BankAccount("1234", "1234", 250.0));
         saveUsers();
     }
+
+    qDebug() << "=== ЗАВАНТАЖЕНІ КАРТКИ ===";
+    for (const auto& acc : database) {
+        qDebug() << "Card:" << acc.getCardNumber() << "PIN:" << acc.getPin();
+    }
+    qDebug() << "==========================";
 }
 
 void ATMController::saveUsers()
@@ -186,4 +195,62 @@ void ATMController::deposit(int bills100, int bills200, int bills500)
 void ATMController::logout()
 {
     currentAccount = nullptr;
+}
+
+
+QString ATMController::transfer(QString recipientCard, double amount)
+{
+    if (!currentAccount) return "Помилка авторизації";
+
+    if (currentAccount->getCardNumber() == recipientCard) {
+        return "Неможливо переказати кошти на ту ж саму картку!";
+    }
+
+    BankAccount* recipient = nullptr;
+    for (size_t i = 0; i < database.size(); ++i) {
+        if (database[i].getCardNumber() == recipientCard) {
+            recipient = &database[i];
+            break;
+        }
+    }
+
+    if (recipient == nullptr) {
+        return "Картку отримувача не знайдено!";
+    }
+
+    if (currentAccount->getBalance() < amount) {
+        return "Недостатньо коштів для переказу!";
+    }
+
+    currentAccount->withdraw(amount);
+    recipient->deposit(amount);
+
+    saveUsers();
+
+    return "OK";
+}
+
+QString ATMController::createAccount(QString pin)
+{
+    QString newCard;
+    bool exists = true;
+
+    while (exists) {
+        int randomNum = 1000 + (std::rand() % 9000);
+        newCard = QString::number(randomNum);
+
+        exists = false;
+        for (const auto& acc : database) {
+            if (acc.getCardNumber() == newCard) {
+                exists = true;
+                break;
+            }
+        }
+    }
+
+    database.push_back(BankAccount(newCard, pin, 0.0));
+
+    saveUsers();
+
+    return newCard;
 }

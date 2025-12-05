@@ -39,13 +39,28 @@ void MainWindow::onDigitPressed()
 
     QString digit = button->text();
 
-    if (ui->stackedWidget->currentWidget() == ui->page_pin) {
+    QWidget* current = ui->stackedWidget->currentWidget();
+    if (current == ui->page_login) {
+        ui->inputCardLogin->setText(ui->inputCardLogin->text() + digit);
+    }
+    else if (current == ui->page_pin) {
         ui->pinInput->setText(ui->pinInput->text() + digit);
     }
-    else if (ui->stackedWidget->currentWidget() == ui->page_withdraw) {
-        QString currentText = ui->lblWithdrawAmount->text();
-        if (currentText == "0") currentText = "";
-        ui->lblWithdrawAmount->setText(currentText + digit);
+    else if (current == ui->page_withdraw) {
+        QString text = ui->lblWithdrawAmount->text();
+        if (text == "0") text = "";
+        ui->lblWithdrawAmount->setText(text + digit);
+    }
+    else if (current == ui->page_trans_card) {
+        ui->inputTransCard->setText(ui->inputTransCard->text() + digit);
+    }
+    else if (current == ui->page_trans_amount) {
+        QString text = ui->lblTransAmount->text();
+        if (text == "0") text = "";
+        ui->lblTransAmount->setText(text + digit);
+    }
+    else if (current == ui->page_register) {
+        ui->inputRegPin->setText(ui->inputRegPin->text() + digit);
     }
 }
 
@@ -62,12 +77,24 @@ void MainWindow::on_btnCancel_clicked()
     ui->stackedWidget->setCurrentWidget(ui->page_login);
 }
 
-void MainWindow::on_btnLogin_clicked()
+void MainWindow::on_btnLoginOk_clicked()
 {
-    if (atm.insertCard("1111")) {
+    QString cardNumber = ui->inputCardLogin->text();
+
+    if (atm.insertCard(cardNumber)) {
         ui->pinInput->clear();
         ui->stackedWidget->setCurrentWidget(ui->page_pin);
+    } else {
+        QMessageBox::warning(this, "Помилка", "Картку не знайдено! Спробуйте іншу.");
+        ui->inputCardLogin->clear();
     }
+}
+
+void MainWindow::on_btnLoginClear_clicked()
+{
+    QString text = ui->inputCardLogin->text();
+    text.chop(1);
+    ui->inputCardLogin->setText(text);
 }
 
 void MainWindow::on_btnEnterPin_clicked()
@@ -97,6 +124,7 @@ void MainWindow::on_btnBack_clicked()
 void MainWindow::on_btnExit_clicked()
 {
     atm.logout();
+    ui->inputCardLogin->clear();
     ui->stackedWidget->setCurrentWidget(ui->page_login);
 }
 
@@ -184,4 +212,100 @@ void MainWindow::on_btnDepositConfirm_clicked()
 void MainWindow::on_btnDepositBack_clicked()
 {
     ui->stackedWidget->setCurrentWidget(ui->page_menu);
+}
+
+void MainWindow::on_btnTransferMenu_clicked()
+{
+    ui->inputTransCard->clear();
+    ui->stackedWidget->setCurrentWidget(ui->page_trans_card);
+}
+
+void MainWindow::on_btnTransNext_clicked()
+{
+    QString card = ui->inputTransCard->text();
+    if (card.length() < 4) {
+        QMessageBox::warning(this, "Помилка", "Введіть коректний номер картки!");
+        return;
+    }
+
+    ui->lblTransAmount->setText("0");
+    ui->stackedWidget->setCurrentWidget(ui->page_trans_amount);
+}
+
+void MainWindow::on_btnTransSend_clicked()
+{
+    QString targetCard = ui->inputTransCard->text();
+    double amount = ui->lblTransAmount->text().toDouble();
+
+    if (amount <= 0) {
+        QMessageBox::warning(this, "Помилка", "Введіть суму!");
+        return;
+    }
+
+    QString result = atm.transfer(targetCard, amount);
+
+    if (result == "OK") {
+        QMessageBox::information(this, "Успіх", "Кошти успішно надіслано!");
+        ui->stackedWidget->setCurrentWidget(ui->page_menu);
+    } else {
+        QMessageBox::critical(this, "Помилка транзакції", result);
+    }
+}
+
+void MainWindow::on_btnTransCardClear_clicked()
+{
+    QString text = ui->inputTransCard->text();
+    text.chop(1);
+    ui->inputTransCard->setText(text);
+}
+
+void MainWindow::on_btnTransAmountClear_clicked()
+{
+    QString text = ui->lblTransAmount->text();
+    text.chop(1);
+    if (text.isEmpty()) text = "0";
+    ui->lblTransAmount->setText(text);
+}
+
+void MainWindow::on_btnTransCancel_clicked() { ui->stackedWidget->setCurrentWidget(ui->page_menu); }
+void MainWindow::on_btnTransBack_clicked() { ui->stackedWidget->setCurrentWidget(ui->page_trans_card); }
+
+void MainWindow::on_btnOpenAccount_clicked()
+{
+    ui->inputRegPin->clear();
+    ui->stackedWidget->setCurrentWidget(ui->page_register);
+}
+
+void MainWindow::on_btnRegConfirm_clicked()
+{
+    QString pin = ui->inputRegPin->text();
+
+    if (pin.length() != 4) {
+        QMessageBox::warning(this, "Помилка", "PIN-код має складатися з 4 цифр!");
+        return;
+    }
+
+    QString newCardNumber = atm.createAccount(pin);
+
+    QString message = QString("Вітаємо! Ваш рахунок відкрито.\n\n"
+                              "ВАШ НОМЕР КАРТКИ: %1\n"
+                              "ВАШ PIN: %2\n\n"
+                              "Запам'ятайте ці дані!").arg(newCardNumber, pin);
+
+    QMessageBox::information(this, "Успіх", message);
+
+    ui->stackedWidget->setCurrentWidget(ui->page_login);
+    ui->inputCardLogin->setText(newCardNumber);
+}
+
+void MainWindow::on_btnRegBack_clicked()
+{
+    ui->stackedWidget->setCurrentWidget(ui->page_login);
+}
+
+void MainWindow::on_btnRegClear_clicked()
+{
+    QString text = ui->inputRegPin->text();
+    text.chop(1);
+    ui->inputRegPin->setText(text);
 }
