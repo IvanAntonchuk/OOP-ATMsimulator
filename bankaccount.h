@@ -14,6 +14,8 @@ public:
     BankAccount(QString card, QString pin, double initialBalance);
 
     QString getCardNumber() const;
+    QString getPin() const { return pinCode; }
+
     double getBalance() const;
 
     bool checkPin(QString inputPin) const;

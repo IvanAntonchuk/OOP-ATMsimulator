@@ -123,15 +123,20 @@ void MainWindow::on_btn500_clicked() { ui->lblWithdrawAmount->setText("500"); }
 void MainWindow::on_btnWithdrawOk_clicked()
 {
     double amount = ui->lblWithdrawAmount->text().toDouble();
-    if (amount <= 0) return;
-
-    if (atm.withdrawAmount(amount)) {
-        QMessageBox::information(this, "Успіх", "Заберіть ваші гроші!");
-        ui->stackedWidget->setCurrentWidget(ui->page_menu);
-    } else {
-        QMessageBox::warning(this, "Помилка", "Недостатньо коштів!");
+    if (amount <= 0) {
+        QMessageBox::warning(this, "Помилка", "Оберіть суму!");
+        return;
     }
-    ui->lblWithdrawAmount->setText("0");
+
+    QString result = atm.tryWithdraw(amount);
+
+    if (result == "OK") {
+        QMessageBox::information(this, "Успіх", "Операція успішна! Заберіть гроші.");
+        ui->stackedWidget->setCurrentWidget(ui->page_menu);
+        ui->lblWithdrawAmount->setText("0");
+    } else {
+        QMessageBox::critical(this, "Відмова", result);
+    }
 }
 
 

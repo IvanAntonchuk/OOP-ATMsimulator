@@ -1,14 +1,91 @@
 #include "atmcontroller.h"
+#include <QDir>
+#include <QDebug>
+#include <QCoreApplication>
 
 ATMController::ATMController()
 {
     currentAccount = nullptr;
 
-    database.push_back(BankAccount("1111", "1111", 5000.0));
+    QString appDir = QCoreApplication::applicationDirPath();
 
-    database.push_back(BankAccount("2222", "0000", 10000.0));
+    configPath = appDir.toStdString() + "/atm_config.json";
+    usersPath = appDir.toStdString() + "/users.json";
 
-    database.push_back(BankAccount("1234", "1234", 250.0));
+    loadConfig();
+
+    loadUsers();
+}
+
+void ATMController::loadConfig()
+{
+    std::ifstream file(configPath);
+    if (file.is_open()) {
+        try {
+            file >> atmConfig;
+        } catch (...) {
+            atmConfig["atm_cash"] = { {"100", 0}, {"200", 0}, {"500", 0} };
+        }
+        file.close();
+    } else {
+        atmConfig["atm_cash"] = { {"100", 100}, {"200", 100}, {"500", 100} };
+        saveConfig();
+    }
+}
+
+void ATMController::saveConfig()
+{
+    std::ofstream file(configPath);
+    if (file.is_open()) {
+        file << atmConfig.dump(4);
+        file.close();
+    }
+}
+
+void ATMController::loadUsers()
+{
+    database.clear();
+    std::ifstream file(usersPath);
+
+    if (file.is_open()) {
+        json jUsers;
+        try {
+            file >> jUsers;
+            for (auto& element : jUsers) {
+                QString card = QString::fromStdString(element["card"]);
+                QString pin = QString::fromStdString(element["pin"]);
+                double bal = element["balance"];
+                database.push_back(BankAccount(card, pin, bal));
+            }
+        } catch (...) {
+            qDebug() << "Помилка читання users.json";
+        }
+        file.close();
+    } else {
+        database.push_back(BankAccount("1111", "1111", 5000.0));
+        database.push_back(BankAccount("2222", "0000", 10000.0));
+        database.push_back(BankAccount("1234", "1234", 250.0));
+        saveUsers();
+    }
+}
+
+void ATMController::saveUsers()
+{
+    json jUsers = json::array();
+
+    for (const auto& acc : database) {
+        jUsers.push_back({
+            {"card", acc.getCardNumber().toStdString()},
+            {"pin", acc.getPin().toStdString()},
+            {"balance", acc.getBalance()}
+        });
+    }
+
+    std::ofstream file(usersPath);
+    if (file.is_open()) {
+        file << jUsers.dump(4);
+        file.close();
+    }
 }
 
 bool ATMController::insertCard(QString cardNumber)
@@ -38,12 +115,56 @@ double ATMController::getBalance()
     return 0.0;
 }
 
-bool ATMController::withdrawAmount(double amount)
+QString ATMController::tryWithdraw(double amount)
 {
-    if (currentAccount != nullptr) {
-        return currentAccount->withdraw(amount);
+    if (!currentAccount) return "Помилка авторизації";
+
+    if (currentAccount->getBalance() < amount) {
+        return "Недостатньо коштів на картці!";
     }
-    return false;
+
+    int needed = (int)amount;
+
+    int bills500 = atmConfig["atm_cash"]["500"];
+    int bills200 = atmConfig["atm_cash"]["200"];
+    int bills100 = atmConfig["atm_cash"]["100"];
+
+    int give500 = 0;
+    int give200 = 0;
+    int give100 = 0;
+
+    while (needed >= 500 && bills500 > 0) {
+        needed -= 500;
+        bills500--;
+        give500++;
+    }
+
+    while (needed >= 200 && bills200 > 0) {
+        needed -= 200;
+        bills200--;
+        give200++;
+    }
+
+    while (needed >= 100 && bills100 > 0) {
+        needed -= 100;
+        bills100--;
+        give100++;
+    }
+
+    if (needed == 0) {
+        currentAccount->withdraw(amount);
+
+        atmConfig["atm_cash"]["500"] = bills500;
+        atmConfig["atm_cash"]["200"] = bills200;
+        atmConfig["atm_cash"]["100"] = bills100;
+
+        saveConfig();
+        saveUsers();
+
+        return "OK";
+    } else {
+        return "У банкоматі немає необхідних купюр\nдля видачі цієї суми (кратність 100, 200, 500).";
+    }
 }
 
 void ATMController::logout()

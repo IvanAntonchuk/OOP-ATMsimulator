@@ -17,6 +17,7 @@ SOURCES += \
 HEADERS += \
     atmcontroller.h \
     bankaccount.h \
+    json.hpp \
     mainwindow.h
 
 FORMS += \
